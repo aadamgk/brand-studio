@@ -26,6 +26,8 @@ col_text, col_img = st.columns(2)
 
 # --- Génération du texte (streaming) ---
 if go:
+    st.session_state.brand_text = ""
+    st.session_state.image_bytes = None
     brief = {"produit": produit, "secteur": secteur, "ton": ton, "public_cible": public}
     messages = prompts.build_brand_prompt(brief)
     with col_text:

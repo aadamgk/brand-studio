@@ -29,3 +29,17 @@ def test_generate_image_raises_on_missing_artifacts(mock_post, mock_key):
 
     with pytest.raises(ValueError, match="artifact"):
         image_client.generate_image("x")
+
+
+@patch("core.image_client.config.get_api_key", return_value="nvapi-test")
+@patch("core.image_client.requests.post")
+def test_generate_image_forwards_explicit_seed(mock_post, mock_key):
+    import base64 as _b64
+    resp = MagicMock()
+    resp.json.return_value = {"artifacts": [{"base64": _b64.b64encode(b"x").decode()}]}
+    resp.raise_for_status.return_value = None
+    mock_post.return_value = resp
+
+    image_client.generate_image("logo", seed=42)
+    _, kwargs = mock_post.call_args
+    assert kwargs["json"]["seed"] == 42

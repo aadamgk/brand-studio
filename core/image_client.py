@@ -1,11 +1,14 @@
 # core/image_client.py
 import base64
+import random
 import requests
 from core import config
 
 
-def generate_image(prompt, seed=0, steps=30, timeout=60):
+def generate_image(prompt, seed=None, steps=30, timeout=60):
     """Appelle le modèle image NVIDIA. Retourne les bytes de l'image décodée."""
+    if seed is None:
+        seed = random.randint(0, 2**31 - 1)
     headers = {
         "Authorization": f"Bearer {config.get_api_key()}",
         "Accept": "application/json",

@@ -19,6 +19,8 @@ def generate_brand(messages, model=None, temperature=0.7):
         stream=True,
     )
     for chunk in stream:
+        if not chunk.choices:
+            continue
         delta = chunk.choices[0].delta.content
         if delta:
             yield delta

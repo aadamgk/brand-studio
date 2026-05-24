@@ -29,3 +29,15 @@ def test_generate_brand_skips_empty_deltas(mock_key, mock_openai):
 
     result = "".join(llm_client.generate_brand([{"role": "user", "content": "x"}]))
     assert result == "AB"
+
+
+@patch("core.llm_client.OpenAI")
+@patch("core.llm_client.config.get_api_key", return_value="nvapi-test")
+def test_generate_brand_skips_chunks_without_choices(mock_key, mock_openai):
+    good = _fake_chunk("ok")
+    empty = MagicMock()
+    empty.choices = []
+    mock_openai.return_value.chat.completions.create.return_value = [good, empty]
+
+    result = "".join(llm_client.generate_brand([{"role": "user", "content": "x"}]))
+    assert result == "ok"
