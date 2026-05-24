@@ -11,6 +11,7 @@ def test_generate_image_decodes_base64(mock_post, mock_key):
     raw = b"\x89PNG fake image bytes"
     encoded = base64.b64encode(raw).decode()
     resp = MagicMock()
+    resp.status_code = 200
     resp.json.return_value = {"artifacts": [{"base64": encoded}]}
     resp.raise_for_status.return_value = None
     mock_post.return_value = resp
@@ -23,6 +24,7 @@ def test_generate_image_decodes_base64(mock_post, mock_key):
 @patch("core.image_client.requests.post")
 def test_generate_image_raises_on_missing_artifacts(mock_post, mock_key):
     resp = MagicMock()
+    resp.status_code = 200
     resp.json.return_value = {"artifacts": []}
     resp.raise_for_status.return_value = None
     mock_post.return_value = resp
@@ -36,6 +38,7 @@ def test_generate_image_raises_on_missing_artifacts(mock_post, mock_key):
 def test_generate_image_forwards_explicit_seed(mock_post, mock_key):
     import base64 as _b64
     resp = MagicMock()
+    resp.status_code = 200
     resp.json.return_value = {"artifacts": [{"base64": _b64.b64encode(b"x").decode()}]}
     resp.raise_for_status.return_value = None
     mock_post.return_value = resp
@@ -43,3 +46,20 @@ def test_generate_image_forwards_explicit_seed(mock_post, mock_key):
     image_client.generate_image("logo", seed=42)
     _, kwargs = mock_post.call_args
     assert kwargs["json"]["seed"] == 42
+
+
+@patch("core.image_client.time.sleep", return_value=None)
+@patch("core.image_client.config.get_api_key", return_value="nvapi-test")
+@patch("core.image_client.requests.post")
+def test_generate_image_retries_on_server_error(mock_post, mock_key, mock_sleep):
+    err = MagicMock()
+    err.status_code = 500
+    ok = MagicMock()
+    ok.status_code = 200
+    ok.json.return_value = {"artifacts": [{"base64": base64.b64encode(b"img").decode()}]}
+    ok.raise_for_status.return_value = None
+    mock_post.side_effect = [err, ok]
+
+    result = image_client.generate_image("logo", retries=3)
+    assert result == b"img"
+    assert mock_post.call_count == 2
