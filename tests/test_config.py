@@ -1,5 +1,4 @@
 # tests/test_config.py
-import importlib
 import pytest
 from core import config
 
