@@ -47,4 +47,5 @@ La clé `NVIDIA_API_KEY` est configurée dans les *Secrets* de l'app
 (jamais dans le code).
 
 ## Démo
-<lien vidéo à ajouter>
+Vidéo de démonstration : [`docs/demo.mp4`](docs/demo.mp4)
+*(déposer le fichier d'enregistrement à cet emplacement)*
