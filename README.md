@@ -10,7 +10,6 @@ et le visuel publicitaire associé, en chaînant deux modèles via l'API **NVIDI
 - **Streamlit** — interface web (thème éditorial personnalisé, mise en page en deux cartes : identité → visuel)
 - **NVIDIA NIM** — accès aux modèles génératifs (API compatible OpenAI pour le texte, via `openai` ; appel REST pour l'image, via `requests`)
 - **Pillow** — validation des images (garde-fou anti-image noire)
-- **pytest** — tests
 
 ## Modèles utilisés
 Les deux modèles sont servis via l'API **NVIDIA NIM** (`https://integrate.api.nvidia.com` pour le texte, `https://ai.api.nvidia.com` pour l'image) :
@@ -33,11 +32,6 @@ cp .env.example .env           # puis renseigner NVIDIA_API_KEY
 streamlit run app.py
 ```
 
-## Tests
-```bash
-pytest -v
-```
-
 ## Architecture
 - `app.py` — UI Streamlit (formulaire → identité de marque en streaming → visuel publicitaire)
 - `core/prompts.py` — construction des prompts (logique pure ; le prompt image est nettoyé de tout Markdown/hashtag/emoji, sinon FLUX renvoie une image noire)
@@ -54,4 +48,3 @@ La clé `NVIDIA_API_KEY` est configurée dans les *Secrets* de l'app
 
 ## Démo
 Vidéo de démonstration : [`docs/demo.mp4`](docs/demo.mp4)
-*(déposer le fichier d'enregistrement à cet emplacement)*
