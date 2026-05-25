@@ -3,16 +3,22 @@
 Interface web qui génère une identité de marque (nom, slogan, post de lancement)
 et le visuel publicitaire associé, en chaînant deux modèles via l'API **NVIDIA NIM**.
 
-Projet individuel — Mastère Data Scientist YNOV, cours Deep Learning.
-
 **🔗 Application en ligne :** https://brand-studio-gc4x2fxfnfoyp4lsjezoa7.streamlit.app/
 
 ## Technologies
 - **Python 3.10+**
 - **Streamlit** — interface web (thème éditorial personnalisé, mise en page en deux cartes : identité → visuel)
-- **NVIDIA NIM** — LLM `meta/llama-3.1-70b-instruct` (compatible OpenAI, via `openai`) + génération d'image `black-forest-labs/flux.1-dev` (via `requests`)
+- **NVIDIA NIM** — accès aux modèles génératifs (API compatible OpenAI pour le texte, via `openai` ; appel REST pour l'image, via `requests`)
 - **Pillow** — validation des images (garde-fou anti-image noire)
-- **pytest** — tests (21 tests)
+- **pytest** — tests
+
+## Modèles utilisés
+Les deux modèles sont servis via l'API **NVIDIA NIM** (`https://integrate.api.nvidia.com` pour le texte, `https://ai.api.nvidia.com` pour l'image) :
+
+| Étape | Modèle | Rôle |
+|-------|--------|------|
+| Texte | **`meta/llama-3.1-70b-instruct`** (LLM Llama 3.1, 70 B) | Génère l'identité de marque : nom, slogan, post de lancement (réponse en streaming) |
+| Image | **`black-forest-labs/flux.1-dev`** (FLUX.1-dev, text-to-image) | Compose le visuel publicitaire à partir de l'identité générée |
 
 ## Installation
 ```bash
