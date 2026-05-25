@@ -21,3 +21,6 @@ Thumbs.db
 # Sorties générées
 *.png
 !docs/**/*.png
+
+# Artefacts Playwright MCP
+.playwright-mcp/

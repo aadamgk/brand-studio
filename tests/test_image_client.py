@@ -1,8 +1,25 @@
 # tests/test_image_client.py
 import base64
+import io
 from unittest.mock import MagicMock, patch
 import pytest
+from PIL import Image
 from core import image_client
+
+
+def _png_b64(color):
+    """Renvoie une image PNG 8x8 unie encodée en base64 (str)."""
+    buf = io.BytesIO()
+    Image.new("RGB", (8, 8), color).save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def _resp_ok(b64):
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json.return_value = {"artifacts": [{"base64": b64}]}
+    resp.raise_for_status.return_value = None
+    return resp
 
 
 @patch("core.image_client.config.get_api_key", return_value="nvapi-test")
@@ -63,3 +80,26 @@ def test_generate_image_retries_on_server_error(mock_post, mock_key, mock_sleep)
     result = image_client.generate_image("logo", retries=3)
     assert result == b"img"
     assert mock_post.call_count == 2
+
+
+@patch("core.image_client.time.sleep", return_value=None)
+@patch("core.image_client.config.get_api_key", return_value="nvapi-test")
+@patch("core.image_client.requests.post")
+def test_generate_image_retries_on_black_then_returns_valid(mock_post, mock_key, mock_sleep):
+    black = _resp_ok(_png_b64((0, 0, 0)))
+    good = _resp_ok(_png_b64((200, 40, 30)))
+    mock_post.side_effect = [black, good]
+
+    result = image_client.generate_image("logo", retries=3)
+    assert result == base64.b64decode(good.json.return_value["artifacts"][0]["base64"])
+    assert mock_post.call_count == 2
+
+
+@patch("core.image_client.time.sleep", return_value=None)
+@patch("core.image_client.config.get_api_key", return_value="nvapi-test")
+@patch("core.image_client.requests.post")
+def test_generate_image_raises_when_always_black(mock_post, mock_key, mock_sleep):
+    mock_post.return_value = _resp_ok(_png_b64((0, 0, 0)))
+
+    with pytest.raises(ValueError, match="noire"):
+        image_client.generate_image("logo", retries=2)

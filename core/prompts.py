@@ -1,5 +1,7 @@
 """Prompt construction logic for brand and image generation."""
 
+import re
+
 SYSTEM_PROMPT = (
     "Tu es un directeur de création expert en branding. À partir de la "
     "description d'un produit, tu proposes une identité de marque percutante. "
@@ -40,19 +42,70 @@ def build_brand_prompt(brief):
     ]
 
 
-def build_image_prompt(brand_text, style="photoréaliste, éclairage studio"):
-    """Construit le prompt image à partir de l'identité de marque générée.
+def extract_brand_name(brand_text):
+    """Extrait le nom de marque depuis le texte Markdown généré par le LLM.
+
+    Cherche la section ``## Nom de marque`` et renvoie la première ligne de
+    contenu non vide qui suit, nettoyée du Markdown. À défaut de section, prend
+    la première ligne de texte exploitable.
 
     Args:
-        brand_text (str): Texte contenant l'identité de marque générée
-        style (str): Style visuel souhaité (défaut: photoréaliste)
+        brand_text (str): Texte de marque (Markdown) renvoyé par le LLM.
 
     Returns:
-        str: Prompt image pour un modèle text-to-image
+        str: Nom de marque nettoyé (chaîne vide si introuvable).
     """
-    truncated_text = brand_text[:500]
+    lines = (brand_text or "").splitlines()
+    for i, line in enumerate(lines):
+        if re.search(r"nom de marque", line, re.IGNORECASE):
+            for following in lines[i + 1:]:
+                cleaned = _strip_markdown(following)
+                if cleaned:
+                    return cleaned[:80]
+            break
+    # Fallback : première ligne de texte nettoyée.
+    for line in lines:
+        cleaned = _strip_markdown(line)
+        if cleaned:
+            return cleaned[:80]
+    return ""
+
+
+def _strip_markdown(text):
+    """Supprime les artefacts Markdown, hashtags et emojis d'une chaîne.
+
+    Le modèle image (FLUX.1-dev) renvoie une image NOIRE lorsqu'on lui passe du
+    Markdown brut, des hashtags ou des emojis : ce nettoyage est indispensable.
+    """
+    text = re.sub(r"https?://\S+", " ", text)            # URLs
+    text = re.sub(r"#\w+", " ", text)                     # hashtags
+    text = re.sub(r"[#>*_`~\[\]()\"]", " ", text)         # tokens Markdown
+    text = re.sub(r"[^\w\s\-.,!?:éèêëàâäîïôöùûüçœ]", " ", text, flags=re.IGNORECASE)  # emojis & symboles
+    text = re.sub(r"\s+", " ", text)
+    return text.strip(" .:-")
+
+
+def build_image_prompt(brand_text, style="photoréaliste, éclairage studio", produit=""):
+    """Construit un prompt image PROPRE pour le modèle text-to-image.
+
+    N'injecte jamais le Markdown brut du texte de marque (titres, gras,
+    hashtags, emojis) : cela fait renvoyer une image noire par FLUX.1-dev. On ne
+    garde que le nom de marque extrait et la description du produit.
+
+    Args:
+        brand_text (str): Identité de marque générée (Markdown).
+        style (str): Style visuel souhaité.
+        produit (str): Description du produit, pour ancrer le visuel.
+
+    Returns:
+        str: Prompt image propre, sans Markdown.
+    """
+    brand_name = extract_brand_name(brand_text)
+    sujet = _strip_markdown(produit)[:120] or "le produit phare de la marque"
+    marque = f" pour la marque {brand_name}" if brand_name else ""
     return (
-        f"Visuel publicitaire de marque, {style}. Composition épurée et "
-        f"professionnelle, haute qualité, adapté à un post de lancement. "
-        f"Éléments de marque : {truncated_text}"
+        f"Photographie publicitaire de produit{marque}. "
+        f"Sujet : {sujet}. Style : {style}. "
+        f"Composition épurée et professionnelle, éclairage soigné, haute qualité, "
+        f"cadrage centré, adaptée à une campagne de lancement. Sans texte ni logo."
     )

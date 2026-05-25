@@ -7,9 +7,10 @@ Projet individuel — Mastère Data Scientist YNOV, cours Deep Learning.
 
 ## Technologies
 - **Python 3.10+**
-- **Streamlit** — interface
-- **NVIDIA NIM** — LLM (compatible OpenAI, via `openai`) + génération d'image (via `requests`)
-- **pytest** — tests
+- **Streamlit** — interface web (thème éditorial personnalisé, mise en page en deux cartes : identité → visuel)
+- **NVIDIA NIM** — LLM `meta/llama-3.1-70b-instruct` (compatible OpenAI, via `openai`) + génération d'image `black-forest-labs/flux.1-dev` (via `requests`)
+- **Pillow** — validation des images (garde-fou anti-image noire)
+- **pytest** — tests (21 tests)
 
 ## Installation
 ```bash
@@ -30,10 +31,10 @@ pytest -v
 ```
 
 ## Architecture
-- `app.py` — UI Streamlit
-- `core/prompts.py` — construction des prompts (logique pure)
+- `app.py` — UI Streamlit (formulaire → identité de marque en streaming → visuel publicitaire)
+- `core/prompts.py` — construction des prompts (logique pure ; le prompt image est nettoyé de tout Markdown/hashtag/emoji, sinon FLUX renvoie une image noire)
 - `core/llm_client.py` — client LLM (streaming)
-- `core/image_client.py` — client image (base64)
+- `core/image_client.py` — client image (décodage base64, retry sur 5xx, garde-fou anti-image noire)
 - `core/config.py` — config et clé API
 
 ## Hébergement

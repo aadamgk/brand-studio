@@ -37,3 +37,38 @@ def test_build_image_prompt_truncates_long_text():
     long_text = "x" * 2000
     img_prompt = prompts.build_image_prompt(long_text)
     assert len(img_prompt) < 1000
+
+
+def test_extract_brand_name_from_markdown_section():
+    brand_text = "## Nom de marque\n**Lumina**\n\n## Slogan\n\"Éclairez\""
+    assert prompts.extract_brand_name(brand_text) == "Lumina"
+
+
+def test_extract_brand_name_fallback_first_line():
+    assert prompts.extract_brand_name("ZenFlow tout court") == "ZenFlow tout court"
+
+
+def test_build_image_prompt_strips_markdown_and_hashtags():
+    """Cause racine du bug image noire : aucun artefact Markdown/hashtag/emoji
+    ne doit fuiter dans le prompt image."""
+    brand_text = (
+        "## Nom de marque\n**Lumina**\n\n## Post de lancement\n"
+        "Découvrez Lumina ! 🎧 #Lumina #CasqueAudio #RéductionDeBruit"
+    )
+    img_prompt = prompts.build_image_prompt(
+        brand_text, style="photoréaliste", produit="casque audio"
+    )
+    assert "##" not in img_prompt
+    assert "**" not in img_prompt
+    assert "#" not in img_prompt
+    assert "🎧" not in img_prompt
+    assert "Lumina" in img_prompt
+    assert "casque audio" in img_prompt
+
+
+def test_build_image_prompt_includes_product():
+    img_prompt = prompts.build_image_prompt(
+        "## Nom de marque\nAqua", produit="bouteille réutilisable"
+    )
+    assert "bouteille réutilisable" in img_prompt
+    assert "Aqua" in img_prompt
