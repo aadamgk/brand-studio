@@ -5,6 +5,8 @@ et le visuel publicitaire associé, en chaînant deux modèles via l'API **NVIDI
 
 Projet individuel — Mastère Data Scientist YNOV, cours Deep Learning.
 
+**🔗 Application en ligne :** https://brand-studio-gc4x2fxfnfoyp4lsjezoa7.streamlit.app/
+
 ## Technologies
 - **Python 3.10+**
 - **Streamlit** — interface web (thème éditorial personnalisé, mise en page en deux cartes : identité → visuel)
@@ -38,8 +40,11 @@ pytest -v
 - `core/config.py` — config et clé API
 
 ## Hébergement
-Déployé sur Streamlit Community Cloud. La clé `NVIDIA_API_KEY` est configurée
-dans les *Secrets* de l'app (jamais dans le code).
+Déployé sur **Streamlit Community Cloud** :
+https://brand-studio-gc4x2fxfnfoyp4lsjezoa7.streamlit.app/
+
+La clé `NVIDIA_API_KEY` est configurée dans les *Secrets* de l'app
+(jamais dans le code).
 
 ## Démo
 <lien vidéo à ajouter>
